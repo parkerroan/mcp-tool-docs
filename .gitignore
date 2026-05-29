@@ -7,3 +7,4 @@ node_modules/
 # OS
 .DS_Store
 .glayvin-validation-report.json
+.glayvin-report.json

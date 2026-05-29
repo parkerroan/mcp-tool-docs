@@ -1,6 +1,6 @@
 {
   "name": "mcp-tool-docs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Generate HTML documentation from an MCP server's tools/list endpoint",
   "bin": {
     "mcp-tool-docs": "./mcp-docs.js"
@@ -10,6 +10,9 @@
     "README.md",
     "LICENSE"
   ],
+  "scripts": {
+    "test": "node mcp-docs.js --help && echo 'smoke test passed'"
+  },
   "engines": {
     "node": ">=18"
   },
@@ -25,7 +28,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/parkerroan/mcp-tool-docs"
+    "url": "git+https://github.com/parkerroan/mcp-tool-docs.git"
   },
   "bugs": {
     "url": "https://github.com/parkerroan/mcp-tool-docs/issues"
