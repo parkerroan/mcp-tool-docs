@@ -1,0 +1,9 @@
+# Ignore generated output
+*.html
+
+# npm
+node_modules/
+
+# OS
+.DS_Store
+.glayvin-validation-report.json

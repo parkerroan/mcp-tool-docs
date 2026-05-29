@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  smoke-test:
+    name: Smoke Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Start example MCP server
+        run: node example/server.js &
+        env:
+          PORT: 3099
+
+      - name: Wait for server to be ready
+        run: |
+          for i in $(seq 1 10); do
+            curl -sf -X POST -d '{}' http://localhost:3099 > /dev/null 2>&1 && break
+            sleep 1
+          done
+
+      - name: Run smoke test
+        run: node mcp-docs.js http://localhost:3099 -o /tmp/test.html
+
+      - name: Verify HTML output exists and is non-empty
+        run: |
+          test -s /tmp/test.html && echo "HTML output OK"
+          grep -q "<html" /tmp/test.html && echo "HTML structure OK"
