@@ -19,6 +19,8 @@ mcp-tool-docs http://localhost:8080 -o docs.html
 
 ## Usage
 
+### CLI mode — generate a static file
+
 ```bash
 # Single server — print HTML to stdout
 npx mcp-tool-docs http://localhost:8080
@@ -28,8 +30,26 @@ npx mcp-tool-docs http://localhost:8080 -o docs.html
 
 # Multiple servers — vertical accordion sidebar, one page
 npx mcp-tool-docs http://localhost:8080/v1.0 http://localhost:8080/v2.0 -o docs.html
-
 ```
+
+### Server mode — serve live docs over HTTP
+
+```bash
+# Start a server that re-fetches tools on every request
+npx mcp-tool-docs serve http://localhost:8080
+
+# Custom port
+npx mcp-tool-docs serve --port 8888 http://localhost:8080
+
+# Multiple MCP servers — same multi-tab output, fetched live
+npx mcp-tool-docs serve --port 3000 http://localhost:8080/v1.0 http://localhost:8080/v2.0
+```
+
+Open `http://localhost:3000` in a browser to see the documentation page. Every page load re-fetches all configured MCP servers, so docs always reflect the current tool definitions — no stale static files.
+
+Server mode is the recommended approach when your MCP server URL changes per environment (e.g. dev / staging / prod) or when you want docs automatically up to date.
+
+---
 
 When multiple URLs are provided, the output page renders a **left-side vertical accordion**. Each server section expands/collapses independently and shows its tool list nested beneath it. Tab labels are derived from the URL:
 
