@@ -29,8 +29,6 @@ npx mcp-tool-docs http://localhost:8080 -o docs.html
 # Multiple servers — vertical accordion sidebar, one page
 npx mcp-tool-docs http://localhost:8080/v1.0 http://localhost:8080/v2.0 -o docs.html
 
-# Generate example output (no server needed)
-npx mcp-tool-docs --example -o example.html
 ```
 
 When multiple URLs are provided, the output page renders a **left-side vertical accordion**. Each server section expands/collapses independently and shows its tool list nested beneath it. Tab labels are derived from the URL:
@@ -110,7 +108,7 @@ Input parameters support:
 ## Example
 
 ```bash
-npx mcp-tool-docs --example -o example.html && open example.html
+# Start the included test server and generate docs
+node example/server.js &
+npx mcp-tool-docs http://localhost:3099 -o example.html && open example.html
 ```
-
-This renders a built-in example tool without requiring a live MCP server.
