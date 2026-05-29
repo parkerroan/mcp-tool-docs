@@ -799,11 +799,14 @@ async function buildServerList(serverUrls) {
 
 function serveMode(args) {
   let port = 3000;
+  let ttlSeconds = 3600;
   const serverUrls = [];
 
   for (let i = 0; i < args.length; i++) {
     if ((args[i] === '--port' || args[i] === '-p') && args[i + 1]) {
       port = parseInt(args[++i], 10);
+    } else if (args[i] === '--ttl' && args[i + 1]) {
+      ttlSeconds = parseInt(args[++i], 10);
     } else if (!args[i].startsWith('-')) {
       serverUrls.push(args[i]);
     }
@@ -814,6 +817,8 @@ function serveMode(args) {
     process.exit(1);
   }
 
+  let cache = null; // { html, expiresAt }
+
   const server = http.createServer(async (req, res) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       res.writeHead(405, { Allow: 'GET, HEAD' });
@@ -821,25 +826,34 @@ function serveMode(args) {
       return;
     }
 
+    // Bust cache if the request includes ?refresh
+    const requestUrl = new URL(req.url, `http://localhost:${port}`);
+    if (requestUrl.searchParams.has('refresh')) cache = null;
+
     const start = Date.now();
     try {
-      const servers = await buildServerList(serverUrls);
-      const html = generateHtml(servers);
+      const now = Date.now();
+      if (!cache || now >= cache.expiresAt) {
+        const servers = await buildServerList(serverUrls);
+        cache = { html: generateHtml(servers), expiresAt: now + ttlSeconds * 1000 };
+        process.stderr.write(`${new Date().toISOString()} cache refreshed (ttl=${ttlSeconds}s)\n`);
+      }
 
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(req.method === 'HEAD' ? undefined : html);
+      res.end(req.method === 'HEAD' ? undefined : cache.html);
 
-      process.stderr.write(`${new Date().toISOString()} GET / 200 (${Date.now() - start}ms)\n`);
+      process.stderr.write(`${new Date().toISOString()} GET ${req.url} 200 (${Date.now() - start}ms)\n`);
     } catch (err) {
       res.writeHead(500, { 'Content-Type': 'text/plain' });
       res.end(`Error generating docs: ${err.message}`);
-      process.stderr.write(`${new Date().toISOString()} GET / 500 — ${err.message}\n`);
+      process.stderr.write(`${new Date().toISOString()} GET ${req.url} 500 — ${err.message}\n`);
     }
   });
 
   server.listen(port, () => {
     process.stderr.write(`mcp-docs server running at http://localhost:${port}\n`);
     process.stderr.write(`Documenting:\n${serverUrls.map(u => `  - ${u}`).join('\n')}\n`);
+    process.stderr.write(`Cache TTL: ${ttlSeconds}s (force refresh: /?refresh)\n`);
   });
 }
 
@@ -856,8 +870,8 @@ CLI mode:
   Fetches tool definitions and writes an HTML page to stdout or a file.
 
 Server mode:
-  Starts an HTTP server that regenerates docs live on every request.
-  Useful when the MCP server URL changes between environments.
+  Starts an HTTP server that re-fetches tool definitions on a TTL and caches
+  the result. Useful when the MCP server URL changes between environments.
 
 Options (CLI):
   --output, -o <file>   Write HTML to a file (default: stdout)
@@ -865,7 +879,10 @@ Options (CLI):
 
 Options (serve):
   --port, -p <port>     Port to listen on (default: 3000)
+  --ttl <seconds>       Cache lifetime in seconds (default: 3600)
   --help, -h            Show this message
+
+  Visit /?refresh to force an immediate cache bust.
 
 Examples:
   # CLI — generate a static HTML file
@@ -874,7 +891,7 @@ Examples:
 
   # Server — serve live docs on http://localhost:3000
   mcp-docs serve http://localhost:8080/mcp
-  mcp-docs serve --port 8000 http://localhost:8080/v1.0 http://localhost:8080/v2.0`;
+  mcp-docs serve --port 8000 --ttl 300 http://localhost:8080/v1.0 http://localhost:8080/v2.0`;
 }
 
 async function main() {

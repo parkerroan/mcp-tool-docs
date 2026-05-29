@@ -35,17 +35,19 @@ npx mcp-tool-docs http://localhost:8080/v1.0 http://localhost:8080/v2.0 -o docs.
 ### Server mode — serve live docs over HTTP
 
 ```bash
-# Start a server that re-fetches tools on every request
+# Start a server (caches for 1 hour by default)
 npx mcp-tool-docs serve http://localhost:8080
 
-# Custom port
-npx mcp-tool-docs serve --port 8888 http://localhost:8080
+# Custom port and TTL (5 minutes)
+npx mcp-tool-docs serve --port 8888 --ttl 300 http://localhost:8080
 
 # Multiple MCP servers — same multi-tab output, fetched live
 npx mcp-tool-docs serve --port 3000 http://localhost:8080/v1.0 http://localhost:8080/v2.0
 ```
 
-Open `http://localhost:3000` in a browser to see the documentation page. Every page load re-fetches all configured MCP servers, so docs always reflect the current tool definitions — no stale static files.
+Open `http://localhost:3000` in a browser to see the documentation page. Tool definitions are fetched once and cached; the cache is refreshed after the TTL expires (default: 3600 seconds / 1 hour).
+
+To force an immediate refresh, visit `http://localhost:3000/?refresh`.
 
 Server mode is the recommended approach when your MCP server URL changes per environment (e.g. dev / staging / prod) or when you want docs automatically up to date.
 
