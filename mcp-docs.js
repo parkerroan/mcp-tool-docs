@@ -486,11 +486,9 @@ function generateHtml(servers) {
   const totalTools = servers.reduce((s, srv) => s + srv.tools.length, 0);
   const generatedAt = new Date().toUTCString();
 
-  let pageHostname;
-  try { pageHostname = new URL(firstSrv.url).hostname; } catch { pageHostname = firstSrv.url; }
   const pageTitle = multi
     ? `MCP Docs — ${servers.length} servers`
-    : `MCP Docs — ${pageHostname}`;
+    : `MCP Docs — ${firstSrv.label}`;
 
   // ── sidebar: accordion sections (multi) or plain list (single) ──
   const sidebarHtml = multi
@@ -502,7 +500,7 @@ function generateHtml(servers) {
         }).join('\n            ');
         return `
         <div class="srv-acc">
-          <button class="srv-hdr" data-idx="${idx}" title="${esc(url)}">
+          <button class="srv-hdr" data-idx="${idx}">
             <span class="srv-lbl">${esc(label)}</span>
             <span class="srv-tog">&#9660;</span>
           </button>
@@ -538,7 +536,6 @@ function generateHtml(servers) {
     const headerHtml = multi ? `
     <div class="svh">
       <span class="svh-label">${esc(label)}</span>
-      <span class="svh-url">${esc(url)}</span>
       <span class="svh-count">${tools.length} tool${tools.length !== 1 ? 's' : ''}</span>
     </div>` : '';
 
@@ -552,17 +549,17 @@ function generateHtml(servers) {
   // ── header ──
   const headerUrlHtml = multi
     ? `<span class="hu">${servers.length} servers</span>`
-    : `<span class="hu" title="${esc(firstSrv.url)}">${esc(firstSrv.url)}</span>`;
+    : `<span class="hu">${esc(firstSrv.label)}</span>`;
   const headerCountHtml = `<span class="hc">${totalTools} tool${totalTools !== 1 ? 's' : ''}</span>`;
 
   // Escape </script so the JSON can't break out of the <script> block.
   const serverDataJson = JSON.stringify(
-    servers.map(s => ({ url: s.url, label: s.label, count: s.tools.length }))
+    servers.map(s => ({ label: s.label, count: s.tools.length }))
   ).replace(/<\/script/gi, '<\\/script');
 
   const footerHtml = multi
     ? `${servers.length} servers &middot; ${totalTools} tools &middot; ${esc(generatedAt)}`
-    : `${esc(firstSrv.url)} &middot; ${esc(generatedAt)}`;
+    : `${totalTools} tool${totalTools !== 1 ? 's' : ''} &middot; ${esc(generatedAt)}`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -620,7 +617,6 @@ function generateHtml(servers) {
     /* ── server section header ── */
     .svh{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;padding:.65rem 1rem;background:var(--accent-bg);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:6px;margin-bottom:1.5rem}
     .svh-label{font-weight:700;color:var(--accent);font-size:.88rem;white-space:nowrap}
-    .svh-url{font-size:.73rem;font-family:monospace;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
     .svh-count{font-size:.72rem;background:var(--accent);color:#fff;padding:1px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0}
 
     /* ── tool card ── */
