@@ -1,25 +1,27 @@
-name: Publish to npm
+name: Publish Package
 
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v*'
+
+permissions:
+  id-token: write  # Required for OIDC / Trusted Publishers
+  contents: read
 
 jobs:
   publish:
-    name: Publish
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write  # for npm provenance
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 20
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
+          cache: ''  # never use caching in release builds
+
+      - run: npm ci
 
       - name: Start example MCP server
         run: node example/server.js &
@@ -36,5 +38,4 @@ jobs:
       - name: Smoke test before publish
         run: node mcp-docs.js http://localhost:3099 -o /tmp/test.html
 
-      - name: Publish to npm
-        run: npm publish --access public --provenance
+      - run: npm publish
