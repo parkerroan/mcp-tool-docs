@@ -17,9 +17,11 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
           cache: ''  # never use caching in release builds
+
+      - run: npm install -g npm@latest  # Trusted Publishers require npm >= 11.5.1
 
       - run: npm ci
 
