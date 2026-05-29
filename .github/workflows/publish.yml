@@ -21,10 +21,20 @@ jobs:
           node-version: 20
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Start example MCP server
+        run: node example/server.js &
+        env:
+          PORT: 3099
+
+      - name: Wait for server to be ready
+        run: |
+          for i in $(seq 1 10); do
+            curl -sf -X POST -d '{}' http://localhost:3099 > /dev/null 2>&1 && break
+            sleep 1
+          done
+
       - name: Smoke test before publish
-        run: node mcp-docs.js --example -o /tmp/test.html
+        run: node mcp-docs.js http://localhost:3099 -o /tmp/test.html
 
       - name: Publish to npm
         run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
