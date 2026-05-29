@@ -70,6 +70,8 @@ For each tool, the page shows:
 
 The page includes a fixed sidebar for navigation and an anchor link per tool.
 
+> **Environment-agnostic output** — The generated HTML does not embed or display the MCP server URL anywhere. Tab and section labels are derived from the URL path, so the output is safe to commit alongside a PR and will render correctly in any environment.
+
 ## Transport Support
 
 This tool targets the **Streamable HTTP** transport ([2025-03-26 spec](https://spec.modelcontextprotocol.io/specification/2025-03-26/basic/transports/#streamable-http)):
