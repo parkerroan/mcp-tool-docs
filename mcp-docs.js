@@ -767,6 +767,82 @@ function generateHtml(servers) {
 </html>`;
 }
 
+// ─── Shared: build server data from URLs ─────────────────────────────────────
+
+async function buildServerList(serverUrls) {
+  const allHosts = serverUrls.map(u => { try { return new URL(u).hostname; } catch { return ''; } });
+  const hostsDiffer = new Set(allHosts).size > 1;
+
+  const results = await Promise.allSettled(serverUrls.map(url => fetchTools(url)));
+
+  return results.map((result, idx) => {
+    const url = serverUrls[idx];
+    let label;
+    try {
+      const u = new URL(url);
+      const path = u.pathname.replace(/\/$/, '');
+      label = hostsDiffer ? u.hostname + (path || '/') : (path || u.hostname);
+    } catch {
+      label = url;
+    }
+
+    if (result.status === 'fulfilled') {
+      return { url, label, tools: result.value };
+    } else {
+      process.stderr.write(`Warning: failed to fetch ${url}: ${result.reason?.message || result.reason}\n`);
+      return { url, label, tools: [] };
+    }
+  });
+}
+
+// ─── Server mode ─────────────────────────────────────────────────────────────
+
+function serveMode(args) {
+  let port = 3000;
+  const serverUrls = [];
+
+  for (let i = 0; i < args.length; i++) {
+    if ((args[i] === '--port' || args[i] === '-p') && args[i + 1]) {
+      port = parseInt(args[++i], 10);
+    } else if (!args[i].startsWith('-')) {
+      serverUrls.push(args[i]);
+    }
+  }
+
+  if (serverUrls.length === 0) {
+    console.error('Error: serve mode requires at least one server URL');
+    process.exit(1);
+  }
+
+  const server = http.createServer(async (req, res) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      res.writeHead(405, { Allow: 'GET, HEAD' });
+      res.end('Method Not Allowed');
+      return;
+    }
+
+    const start = Date.now();
+    try {
+      const servers = await buildServerList(serverUrls);
+      const html = generateHtml(servers);
+
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(req.method === 'HEAD' ? undefined : html);
+
+      process.stderr.write(`${new Date().toISOString()} GET / 200 (${Date.now() - start}ms)\n`);
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end(`Error generating docs: ${err.message}`);
+      process.stderr.write(`${new Date().toISOString()} GET / 500 — ${err.message}\n`);
+    }
+  });
+
+  server.listen(port, () => {
+    process.stderr.write(`mcp-docs server running at http://localhost:${port}\n`);
+    process.stderr.write(`Documenting:\n${serverUrls.map(u => `  - ${u}`).join('\n')}\n`);
+  });
+}
+
 // ─── CLI ─────────────────────────────────────────────────────────────────────
 
 function usage() {
@@ -774,14 +850,31 @@ function usage() {
 
 Usage:
   mcp-docs <server-url> [<server-url>...] [--output|-o <file>]
+  mcp-docs serve [--port|-p <port>] <server-url> [<server-url>...]
 
-Options:
+CLI mode:
+  Fetches tool definitions and writes an HTML page to stdout or a file.
+
+Server mode:
+  Starts an HTTP server that regenerates docs live on every request.
+  Useful when the MCP server URL changes between environments.
+
+Options (CLI):
   --output, -o <file>   Write HTML to a file (default: stdout)
   --help, -h            Show this message
 
+Options (serve):
+  --port, -p <port>     Port to listen on (default: 3000)
+  --help, -h            Show this message
+
 Examples:
+  # CLI — generate a static HTML file
   mcp-docs http://localhost:8080/mcp > docs.html
-  mcp-docs http://localhost:8080/v1.0 http://localhost:8080/v2.0 -o docs.html`;
+  mcp-docs http://localhost:8080/v1.0 http://localhost:8080/v2.0 -o docs.html
+
+  # Server — serve live docs on http://localhost:3000
+  mcp-docs serve http://localhost:8080/mcp
+  mcp-docs serve --port 8000 http://localhost:8080/v1.0 http://localhost:8080/v2.0`;
 }
 
 async function main() {
@@ -792,6 +885,12 @@ async function main() {
     process.exit(args.length ? 0 : 1);
   }
 
+  // Server mode
+  if (args[0] === 'serve') {
+    return serveMode(args.slice(1));
+  }
+
+  // CLI mode
   const serverUrls = [];
   let outputFile = null;
 
@@ -809,31 +908,7 @@ async function main() {
   }
 
   try {
-    // Derive short labels for each URL
-    const allHosts = serverUrls.map(u => { try { return new URL(u).hostname; } catch { return ''; } });
-    const hostsDiffer = new Set(allHosts).size > 1;
-
-    const results = await Promise.allSettled(serverUrls.map(url => fetchTools(url)));
-
-    const servers = results.map((result, idx) => {
-      const url = serverUrls[idx];
-      let label;
-      try {
-        const u = new URL(url);
-        const path = u.pathname.replace(/\/$/, '');
-        label = hostsDiffer ? u.hostname + (path || '/') : (path || u.hostname);
-      } catch {
-        label = url;
-      }
-
-      if (result.status === 'fulfilled') {
-        return { url, label, tools: result.value };
-      } else {
-        process.stderr.write(`Warning: failed to fetch ${url}: ${result.reason?.message || result.reason}\n`);
-        return { url, label, tools: [] };
-      }
-    });
-
+    const servers = await buildServerList(serverUrls);
     const html = generateHtml(servers);
 
     if (outputFile) {
