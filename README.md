@@ -1,7 +1,7 @@
-# mcp-docs
+# mcp-tool-docs
 
-[![npm](https://img.shields.io/npm/v/mcp-docs)](https://www.npmjs.com/package/mcp-docs)
-[![CI](https://github.com/parkerroan/mcp-docs/actions/workflows/ci.yml/badge.svg)](https://github.com/parkerroan/mcp-docs/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/mcp-tool-docs)](https://www.npmjs.com/package/mcp-tool-docs)
+[![CI](https://github.com/parkerroan/mcp-tool-docs/actions/workflows/ci.yml/badge.svg)](https://github.com/parkerroan/mcp-tool-docs/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Generate a clean HTML documentation page from any [MCP](https://modelcontextprotocol.io) server's `tools/list` endpoint — like Swagger UI, but for MCP.
@@ -10,27 +10,27 @@ Generate a clean HTML documentation page from any [MCP](https://modelcontextprot
 
 ```bash
 # Run without installing (recommended for one-off use)
-npx mcp-docs http://localhost:8080 -o docs.html
+npx mcp-tool-docs http://localhost:8080 -o docs.html
 
 # Install globally
-npm install -g mcp-docs
-mcp-docs http://localhost:8080 -o docs.html
+npm install -g mcp-tool-docs
+mcp-tool-docs http://localhost:8080 -o docs.html
 ```
 
 ## Usage
 
 ```bash
 # Single server — print HTML to stdout
-npx mcp-docs http://localhost:8080
+npx mcp-tool-docs http://localhost:8080
 
 # Single server — write to file
-npx mcp-docs http://localhost:8080 -o docs.html
+npx mcp-tool-docs http://localhost:8080 -o docs.html
 
 # Multiple servers — vertical accordion sidebar, one page
-npx mcp-docs http://localhost:8080/v1.0 http://localhost:8080/v2.0 -o docs.html
+npx mcp-tool-docs http://localhost:8080/v1.0 http://localhost:8080/v2.0 -o docs.html
 
 # Generate example output (no server needed)
-npx mcp-docs --example -o example.html
+npx mcp-tool-docs --example -o example.html
 ```
 
 When multiple URLs are provided, the output page renders a **left-side vertical accordion**. Each server section expands/collapses independently and shows its tool list nested beneath it. Tab labels are derived from the URL:
@@ -110,7 +110,7 @@ Input parameters support:
 ## Example
 
 ```bash
-npx mcp-docs --example -o example.html && open example.html
+npx mcp-tool-docs --example -o example.html && open example.html
 ```
 
 This renders a built-in example tool without requiring a live MCP server.
