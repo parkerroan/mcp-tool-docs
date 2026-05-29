@@ -131,6 +131,6 @@ Input parameters support:
 
 ```bash
 # Start the included test server and generate docs
-node example/server.js &
+node test-server/server.js &
 npx mcp-tool-docs http://localhost:3099 -o example.html && open example.html
 ```

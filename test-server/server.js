@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * example/server.js — Lightweight MCP test server for mcp-docs development
+ * test-server/server.js — Lightweight MCP test server for mcp-docs development
  *
  * Implements the tools/list JSON-RPC endpoint only.
- * No external dependencies. Run with: node example/server.js
+ * No external dependencies. Run with: node test-server/server.js
  *
  * Default port: 3001
- * Usage:  node example/server.js [port]
- *         PORT=4000 node example/server.js
+ * Usage:  node test-server/server.js [port]
+ *         PORT=4000 node test-server/server.js
  */
 
 const http = require('http');

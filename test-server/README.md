@@ -5,7 +5,7 @@ A minimal, zero-dependency MCP server for testing `mcp-docs` locally.
 ## Usage
 
 ```bash
-node example/server.js
+node test-server/server.js
 # → MCP test server running at http://localhost:3001
 
 npx mcp-docs http://localhost:3001 -o docs.html && open docs.html
@@ -14,9 +14,9 @@ npx mcp-docs http://localhost:3001 -o docs.html && open docs.html
 Custom port:
 
 ```bash
-node example/server.js 4000
+node test-server/server.js 4000
 # or
-PORT=4000 node example/server.js
+PORT=4000 node test-server/server.js
 ```
 
 ## What It Serves

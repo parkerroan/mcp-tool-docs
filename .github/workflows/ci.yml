@@ -21,8 +21,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Start example MCP server
-        run: node example/server.js &
+      - name: Start test MCP server
+        run: node test-server/server.js &
         env:
           PORT: 3099
 
