@@ -804,7 +804,14 @@ function serveMode(args) {
     } else if (args[i] === '--ttl' && args[i + 1]) {
       ttlSeconds = parseInt(args[++i], 10);
     } else if (!args[i].startsWith('-')) {
-      serverUrls.push(args[i]);
+      try {
+        const u = new URL(args[i]);
+        if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error('bad scheme');
+        serverUrls.push(args[i]);
+      } catch {
+        console.error(`Error: not a valid URL: ${args[i]}`);
+        process.exit(1);
+      }
     }
   }
 
@@ -911,7 +918,14 @@ async function main() {
     if ((args[i] === '--output' || args[i] === '-o') && args[i + 1]) {
       outputFile = args[++i];
     } else if (!args[i].startsWith('-')) {
-      serverUrls.push(args[i]);
+      try {
+        const u = new URL(args[i]);
+        if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error('bad scheme');
+        serverUrls.push(args[i]);
+      } catch {
+        console.error(`Error: not a valid URL: ${args[i]}`);
+        process.exit(1);
+      }
     }
   }
 
